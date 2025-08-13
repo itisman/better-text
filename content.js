@@ -93,10 +93,22 @@ function createPopup() {
 }
 
 function requestTranslation(translationElement, examplesContainer) {
+  if (!chrome.runtime) {
+    translationElement.innerHTML = '<span class="error-text">Chrome runtime not available</span>';
+    examplesContainer.innerHTML = '<div class="no-examples">Unable to load examples</div>';
+    return;
+  }
+
   chrome.runtime.sendMessage({
     action: 'textSelected',
     text: selectedText
   }, response => {
+    if (chrome.runtime.lastError) {
+      console.error('Chrome runtime error:', chrome.runtime.lastError);
+      translationElement.innerHTML = '<span class="error-text">Extension communication error</span>';
+      examplesContainer.innerHTML = '<div class="no-examples">Unable to load examples</div>';
+      return;
+    }
     if (response) {
       if (response.status === 'success') {
         const translationData = response.translation;
@@ -147,7 +159,7 @@ function requestTranslation(translationElement, examplesContainer) {
         }
       }
     } else {
-      translationElement.innerHTML = '<span class="error-text">Failed to get translation</span>';
+      translationElement.innerHTML = '<span class="error-text">Failed to get translation - no response from background script</span>';
       examplesContainer.innerHTML = '<div class="no-examples">Unable to load examples</div>';
     }
   });

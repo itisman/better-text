@@ -5,7 +5,8 @@
       "Bash(node:*)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
-      "WebFetch(domain:platform.openai.com)"
+      "WebFetch(domain:platform.openai.com)",
+      "Bash(open:*)"
     ],
     "deny": [],
     "ask": []
