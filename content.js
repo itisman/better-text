@@ -86,11 +86,19 @@ function requestTranslation(translationElement) {
     if (response) {
       if (response.status === 'success') {
         translationElement.textContent = response.translation;
+        let additionalInfo = '';
         if (response.fromCache) {
-          translationElement.innerHTML += '<span class="cache-indicator"> (cached)</span>';
+          additionalInfo += '<span class="cache-indicator"> (cached)</span>';
         }
+        if (response.counter) {
+          additionalInfo += `<span class="counter-indicator"> [#${response.counter}]</span>`;
+        }
+        translationElement.innerHTML += additionalInfo;
       } else if (response.status === 'error') {
         translationElement.innerHTML = `<span class="error-text">${response.message}</span>`;
+        if (response.counter) {
+          translationElement.innerHTML += `<span class="counter-indicator"> [#${response.counter}]</span>`;
+        }
       }
     } else {
       translationElement.innerHTML = '<span class="error-text">Failed to get translation</span>';

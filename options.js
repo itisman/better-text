@@ -14,6 +14,7 @@ const OPENAI_MODELS = [
 
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
+  loadStatistics();
   setupEventListeners();
 });
 
@@ -22,6 +23,7 @@ function setupEventListeners() {
   document.getElementById('saveBtn').addEventListener('click', saveSettings);
   document.getElementById('testBtn').addEventListener('click', testConnection);
   document.getElementById('clearCacheBtn').addEventListener('click', clearCache);
+  document.getElementById('resetCounterBtn').addEventListener('click', resetCounter);
 }
 
 function handleProviderChange(e) {
@@ -181,5 +183,66 @@ function showStatus(message, type = 'info') {
     setTimeout(() => {
       statusEl.style.display = 'none';
     }, 5000);
+  }
+}
+
+async function loadStatistics() {
+  try {
+    const result = await chrome.storage.local.get(['translationCounters', 'targetLanguage']);
+    const counters = result.translationCounters || {};
+    const targetLang = result.targetLanguage || 'zh-CN';
+    
+    // Calculate total unique texts and total translations
+    const counterEntries = Object.entries(counters);
+    const uniqueTexts = counterEntries.length;
+    const totalTranslations = counterEntries.reduce((sum, [_, count]) => sum + count, 0);
+    
+    document.getElementById('totalUniqueTexts').textContent = `Unique texts translated: ${uniqueTexts}`;
+    document.getElementById('totalTranslations').textContent = `Total translation requests: ${totalTranslations}`;
+    
+    // Show top 10 most frequently translated texts
+    const topTexts = counterEntries
+      .filter(([key, _]) => key.endsWith(`_${targetLang}`))
+      .map(([key, count]) => {
+        const text = key.substring(0, key.lastIndexOf('_'));
+        return { text, count };
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+    
+    const listContainer = document.getElementById('topTranslationsList');
+    listContainer.innerHTML = '';
+    
+    if (topTexts.length === 0) {
+      listContainer.innerHTML = '<p class="no-data">No translations yet</p>';
+    } else {
+      topTexts.forEach(({ text, count }) => {
+        const item = document.createElement('div');
+        item.className = 'translation-item';
+        
+        const truncatedText = text.length > 50 ? text.substring(0, 50) + '...' : text;
+        item.innerHTML = `
+          <span class="translation-text-preview">${truncatedText}</span>
+          <span class="translation-count">${count} time${count > 1 ? 's' : ''}</span>
+        `;
+        
+        listContainer.appendChild(item);
+      });
+    }
+  } catch (error) {
+    console.error('Error loading statistics:', error);
+    document.getElementById('totalUniqueTexts').textContent = 'Error loading statistics';
+    document.getElementById('totalTranslations').textContent = '';
+  }
+}
+
+async function resetCounter() {
+  try {
+    await chrome.storage.local.set({ translationCounters: {} });
+    showStatus('All translation counters reset successfully!', 'success');
+    loadStatistics();
+  } catch (error) {
+    console.error('Error resetting counters:', error);
+    showStatus('Error resetting counters', 'error');
   }
 }

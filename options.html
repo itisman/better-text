@@ -80,10 +80,23 @@
         </div>
       </section>
 
+      <section class="settings-section">
+        <h2>Statistics</h2>
+        <div class="stats-info">
+          <p id="totalUniqueTexts">Unique texts translated: Loading...</p>
+          <p id="totalTranslations">Total translation requests: Loading...</p>
+        </div>
+        <div id="topTranslations" class="top-translations">
+          <h3>Most Frequently Translated</h3>
+          <div id="topTranslationsList"></div>
+        </div>
+      </section>
+
       <div class="button-group">
         <button id="saveBtn" class="btn btn-primary">Save Settings</button>
         <button id="testBtn" class="btn btn-secondary">Test Connection</button>
         <button id="clearCacheBtn" class="btn btn-secondary">Clear Cache</button>
+        <button id="resetCounterBtn" class="btn btn-secondary">Reset Counter</button>
       </div>
 
       <div id="status" class="status-message"></div>

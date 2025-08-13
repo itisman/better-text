@@ -205,3 +205,80 @@ footer a {
 footer a:hover {
   text-decoration: underline;
 }
+
+.stats-info {
+  background: #f7f9fc;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+  margin-bottom: 20px;
+}
+
+.stats-info p {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.stats-info p:last-child {
+  margin-bottom: 0;
+}
+
+.top-translations {
+  margin-top: 20px;
+}
+
+.top-translations h3 {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+#topTranslationsList {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.translation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.translation-item:last-child {
+  margin-bottom: 0;
+}
+
+.translation-text-preview {
+  flex: 1;
+  font-size: 14px;
+  color: #374151;
+  margin-right: 12px;
+  word-break: break-word;
+}
+
+.translation-count {
+  background: #667eea;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.no-data {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 20px;
+}

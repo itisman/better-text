@@ -2,10 +2,12 @@
 // ABOUTME: Manages communication between content scripts and extension components
 
 let translationCache = {};
+let translationCounters = {};  // Store counter for each unique text
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Better Text Translator extension installed');
   loadTranslationCache();
+  loadTranslationCounters();
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -25,6 +27,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function handleTextSelection(text, sendResponse) {
   console.log('Text selected:', text);
   
+  // Increment counter for this specific text
+  const counterKey = `${text}_${await getTargetLanguage()}`;
+  if (!translationCounters[counterKey]) {
+    translationCounters[counterKey] = 0;
+  }
+  translationCounters[counterKey]++;
+  saveTranslationCounters();
+  
   chrome.storage.local.set({ lastSelectedText: text });
   
   try {
@@ -40,7 +50,8 @@ async function handleTextSelection(text, sendResponse) {
     if (!settings.apiProvider || !settings.apiKey || !settings.model) {
       sendResponse({ 
         status: 'error', 
-        message: 'Please configure API settings first' 
+        message: 'Please configure API settings first',
+        counter: translationCounters[counterKey]
       });
       return;
     }
@@ -51,7 +62,8 @@ async function handleTextSelection(text, sendResponse) {
       sendResponse({ 
         status: 'success', 
         translation: translationCache[cacheKey],
-        fromCache: true
+        fromCache: true,
+        counter: translationCounters[counterKey]
       });
       return;
     }
@@ -72,13 +84,15 @@ async function handleTextSelection(text, sendResponse) {
     
     sendResponse({ 
       status: 'success', 
-      translation: translation 
+      translation: translation,
+      counter: translationCounters[counterKey]
     });
   } catch (error) {
     console.error('Translation error:', error);
     sendResponse({ 
       status: 'error', 
-      message: error.message 
+      message: error.message,
+      counter: translationCounters[counterKey]
     });
   }
 }
@@ -206,7 +220,7 @@ async function loadTranslationCache() {
 }
 
 function saveTranslationCache() {
-  const maxCacheSize = 100;
+  const maxCacheSize = 1000;
   const cacheKeys = Object.keys(translationCache);
   
   if (cacheKeys.length > maxCacheSize) {
@@ -215,4 +229,38 @@ function saveTranslationCache() {
   }
   
   chrome.storage.local.set({ translationCache });
+}
+
+async function loadTranslationCounters() {
+  const result = await chrome.storage.local.get('translationCounters');
+  if (result.translationCounters) {
+    translationCounters = result.translationCounters;
+  }
+}
+
+function saveTranslationCounters() {
+  // Limit the number of tracked texts to prevent storage bloat
+  const maxTrackedTexts = 1000;
+  const counterKeys = Object.keys(translationCounters);
+  
+  if (counterKeys.length > maxTrackedTexts) {
+    // Sort by count and keep top 1000 most frequently translated texts
+    const sortedEntries = counterKeys
+      .map(key => ({ key, count: translationCounters[key] }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, maxTrackedTexts);
+    
+    const newCounters = {};
+    sortedEntries.forEach(entry => {
+      newCounters[entry.key] = entry.count;
+    });
+    translationCounters = newCounters;
+  }
+  
+  chrome.storage.local.set({ translationCounters });
+}
+
+async function getTargetLanguage() {
+  const settings = await chrome.storage.local.get('targetLanguage');
+  return settings.targetLanguage || 'zh-CN';
 }

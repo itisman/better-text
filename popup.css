@@ -135,6 +135,13 @@
   margin-left: 8px;
 }
 
+.counter-indicator {
+  font-size: 11px;
+  color: #9333ea;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
 .popup-content::-webkit-scrollbar {
   width: 6px;
 }
