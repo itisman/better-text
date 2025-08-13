@@ -98,20 +98,72 @@ async function handleTextSelection(text, sendResponse) {
 }
 
 async function translateText(text, provider, apiKey, model, targetLanguage, autoDetect) {
-  const prompt = autoDetect 
-    ? `Translate the following text to ${getLanguageName(targetLanguage)}. Only provide the translation, no explanations:\n\n${text}`
-    : `Translate the following text to ${getLanguageName(targetLanguage)}. Only provide the translation, no explanations:\n\n${text}`;
+  const languageName = getLanguageName(targetLanguage);
+  const prompt = `Translate "${text}" to ${languageName} and provide 2 example sentences using the word/phrase with their ${languageName} translations.`;
+  
+  const responseSchema = {
+    type: "object",
+    properties: {
+      translation: {
+        type: "string",
+        description: "The translation of the input text"
+      },
+      examples: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            english: {
+              type: "string",
+              description: "Example sentence in English using the word/phrase"
+            },
+            translation: {
+              type: "string", 
+              description: "Translation of the example sentence"
+            }
+          },
+          required: ["english", "translation"],
+          additionalProperties: false
+        },
+        minItems: 2,
+        maxItems: 2,
+        description: "Array of exactly 2 example sentences with translations"
+      }
+    },
+    required: ["translation", "examples"],
+    additionalProperties: false
+  };
   
   if (provider === 'deepseek') {
-    return await callDeepSeekAPI(apiKey, model, prompt);
+    return await callDeepSeekAPI(apiKey, model, prompt, responseSchema);
   } else if (provider === 'openai') {
-    return await callOpenAIAPI(apiKey, model, prompt);
+    return await callOpenAIAPI(apiKey, model, prompt, responseSchema);
   } else {
     throw new Error('Invalid API provider');
   }
 }
 
-async function callDeepSeekAPI(apiKey, model, prompt) {
+async function callDeepSeekAPI(apiKey, model, prompt, responseSchema) {
+  // DeepSeek doesn't support structured outputs yet, so we'll use a detailed prompt
+  const enhancedPrompt = `${prompt}
+
+Respond with valid JSON in this exact format:
+{
+  "translation": "the translation of the text",
+  "examples": [
+    {
+      "english": "first example sentence using the word/phrase",
+      "translation": "translation of first example"
+    },
+    {
+      "english": "second example sentence using the word/phrase",
+      "translation": "translation of second example"
+    }
+  ]
+}
+
+Important: Only return valid JSON, no other text.`;
+
   const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -123,11 +175,11 @@ async function callDeepSeekAPI(apiKey, model, prompt) {
       messages: [
         {
           role: 'system',
-          content: 'You are a professional translator. Provide only the translation without any explanations.'
+          content: 'You are a professional translator. You must respond only with valid JSON in the exact format requested. Do not include any text outside the JSON structure.'
         },
         {
           role: 'user',
-          content: prompt
+          content: enhancedPrompt
         }
       ],
       temperature: 0.3,
@@ -141,10 +193,20 @@ async function callDeepSeekAPI(apiKey, model, prompt) {
   }
   
   const data = await response.json();
-  return data.choices[0].message.content.trim();
+  const content = data.choices[0].message.content.trim();
+  
+  try {
+    return JSON.parse(content);
+  } catch (parseError) {
+    // Fallback: if JSON parsing fails, return simple format
+    return {
+      translation: content,
+      examples: []
+    };
+  }
 }
 
-async function callOpenAIAPI(apiKey, model, prompt) {
+async function callOpenAIAPI(apiKey, model, prompt, responseSchema) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -156,7 +218,7 @@ async function callOpenAIAPI(apiKey, model, prompt) {
       messages: [
         {
           role: 'system',
-          content: 'You are a professional translator. Provide only the translation without any explanations.'
+          content: 'You are a professional translator.'
         },
         {
           role: 'user',
@@ -164,7 +226,15 @@ async function callOpenAIAPI(apiKey, model, prompt) {
         }
       ],
       temperature: 0.3,
-      max_tokens: 1000
+      max_tokens: 1000,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "translation_with_examples",
+          schema: responseSchema,
+          strict: true
+        }
+      }
     })
   });
   
@@ -174,7 +244,17 @@ async function callOpenAIAPI(apiKey, model, prompt) {
   }
   
   const data = await response.json();
-  return data.choices[0].message.content.trim();
+  const content = data.choices[0].message.content.trim();
+  
+  try {
+    return JSON.parse(content);
+  } catch (parseError) {
+    // Fallback: if JSON parsing fails, return simple format
+    return {
+      translation: content,
+      examples: []
+    };
+  }
 }
 
 async function testTranslation(request, sendResponse) {

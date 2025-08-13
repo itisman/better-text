@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Better Text Translator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .instructions {
+            background: #f0f8ff;
+            border-left: 4px solid #007acc;
+        }
+        .test-text {
+            background: #f9f9f9;
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>Better Text Translator Test Page</h1>
+    
+    <div class="test-section instructions">
+        <h2>How to Test</h2>
+        <ol>
+            <li>Load this extension in Chrome by going to chrome://extensions/</li>
+            <li>Enable Developer mode and click "Load unpacked"</li>
+            <li>Select the extension directory</li>
+            <li>Configure your API settings by clicking the extension icon</li>
+            <li>Come back to this page and double-click on any text below</li>
+        </ol>
+    </div>
+
+    <div class="test-section test-text">
+        <h2>Test Words and Phrases</h2>
+        <p>Double-click on any of these words or phrases to test translation:</p>
+        <ul>
+            <li><strong>like</strong> - The example word you mentioned</li>
+            <li><strong>hello</strong> - Simple greeting</li>
+            <li><strong>beautiful</strong> - Adjective</li>
+            <li><strong>running</strong> - Verb</li>
+            <li><strong>friendship</strong> - Abstract noun</li>
+            <li><strong>computer</strong> - Technical term</li>
+            <li><strong>delicious</strong> - Descriptive word</li>
+        </ul>
+        
+        <h3>Phrases to Test</h3>
+        <ul>
+            <li><strong>good morning</strong> - Common greeting</li>
+            <li><strong>how are you</strong> - Question</li>
+            <li><strong>thank you</strong> - Gratitude expression</li>
+            <li><strong>I love coffee</strong> - Simple sentence</li>
+            <li><strong>see you later</strong> - Farewell phrase</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Expected Behavior</h2>
+        <p>When you double-click on text, you should see:</p>
+        <ol>
+            <li>A popup appearing in the top-right corner</li>
+            <li>The original text displayed</li>
+            <li>The translation in your target language (default: Chinese)</li>
+            <li><strong>NEW:</strong> Two example sentences using the word/phrase with their translations</li>
+        </ol>
+    </div>
+</body>
+</html>

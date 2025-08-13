@@ -64,8 +64,22 @@ function createPopup() {
   translationSection.appendChild(translationLabel);
   translationSection.appendChild(translationText);
   
+  const examplesSection = document.createElement('div');
+  examplesSection.className = 'text-section examples-section';
+  
+  const examplesLabel = document.createElement('div');
+  examplesLabel.className = 'section-label';
+  examplesLabel.textContent = 'Example Sentences:';
+  
+  const examplesContainer = document.createElement('div');
+  examplesContainer.className = 'examples-container';
+  
+  examplesSection.appendChild(examplesLabel);
+  examplesSection.appendChild(examplesContainer);
+  
   content.appendChild(originalSection);
   content.appendChild(translationSection);
+  content.appendChild(examplesSection);
   
   popupElement.appendChild(header);
   popupElement.appendChild(content);
@@ -75,17 +89,48 @@ function createPopup() {
     popupElement.classList.add('show');
   }, 10);
   
-  requestTranslation(translationText);
+  requestTranslation(translationText, examplesContainer);
 }
 
-function requestTranslation(translationElement) {
+function requestTranslation(translationElement, examplesContainer) {
   chrome.runtime.sendMessage({
     action: 'textSelected',
     text: selectedText
   }, response => {
     if (response) {
       if (response.status === 'success') {
-        translationElement.textContent = response.translation;
+        const translationData = response.translation;
+        
+        // Handle both old format (string) and new format (object)
+        if (typeof translationData === 'string') {
+          translationElement.textContent = translationData;
+        } else {
+          translationElement.textContent = translationData.translation || 'No translation available';
+          
+          // Display examples
+          if (translationData.examples && translationData.examples.length > 0) {
+            examplesContainer.innerHTML = '';
+            translationData.examples.forEach((example, index) => {
+              const exampleItem = document.createElement('div');
+              exampleItem.className = 'example-item';
+              
+              const englishSentence = document.createElement('div');
+              englishSentence.className = 'example-english';
+              englishSentence.textContent = example.english;
+              
+              const translatedSentence = document.createElement('div');
+              translatedSentence.className = 'example-translation';
+              translatedSentence.textContent = example.translation;
+              
+              exampleItem.appendChild(englishSentence);
+              exampleItem.appendChild(translatedSentence);
+              examplesContainer.appendChild(exampleItem);
+            });
+          } else {
+            examplesContainer.innerHTML = '<div class="no-examples">No example sentences available</div>';
+          }
+        }
+        
         let additionalInfo = '';
         if (response.fromCache) {
           additionalInfo += '<span class="cache-indicator"> (cached)</span>';
@@ -96,12 +141,14 @@ function requestTranslation(translationElement) {
         translationElement.innerHTML += additionalInfo;
       } else if (response.status === 'error') {
         translationElement.innerHTML = `<span class="error-text">${response.message}</span>`;
+        examplesContainer.innerHTML = '<div class="no-examples">Unable to load examples</div>';
         if (response.counter) {
           translationElement.innerHTML += `<span class="counter-indicator"> [#${response.counter}]</span>`;
         }
       }
     } else {
       translationElement.innerHTML = '<span class="error-text">Failed to get translation</span>';
+      examplesContainer.innerHTML = '<div class="no-examples">Unable to load examples</div>';
     }
   });
 }
