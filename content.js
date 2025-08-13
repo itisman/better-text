@@ -20,6 +20,11 @@ function createPopup() {
   title.textContent = 'Text Translator';
   title.className = 'popup-title';
   
+  const counterDisplay = document.createElement('span');
+  counterDisplay.className = 'popup-counter';
+  counterDisplay.id = 'popup-counter';
+  counterDisplay.style.display = 'none'; // Hidden initially
+  
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '×';
   closeBtn.className = 'popup-close';
@@ -31,6 +36,7 @@ function createPopup() {
   };
   
   header.appendChild(title);
+  header.appendChild(counterDisplay);
   header.appendChild(closeBtn);
   
   const content = document.createElement('div');
@@ -147,15 +153,29 @@ function requestTranslation(translationElement, examplesContainer) {
         if (response.fromCache) {
           additionalInfo += '<span class="cache-indicator"> (cached)</span>';
         }
-        if (response.counter) {
-          additionalInfo += `<span class="counter-indicator"> [#${response.counter}]</span>`;
+        if (additionalInfo) {
+          translationElement.innerHTML += additionalInfo;
         }
-        translationElement.innerHTML += additionalInfo;
+        
+        // Update counter in header
+        if (response.counter) {
+          const counterElement = document.getElementById('popup-counter');
+          if (counterElement) {
+            counterElement.textContent = `#${response.counter}`;
+            counterElement.style.display = 'inline';
+          }
+        }
       } else if (response.status === 'error') {
         translationElement.innerHTML = `<span class="error-text">${response.message}</span>`;
         examplesContainer.innerHTML = '<div class="no-examples">Unable to load examples</div>';
+        
+        // Update counter in header even for errors
         if (response.counter) {
-          translationElement.innerHTML += `<span class="counter-indicator"> [#${response.counter}]</span>`;
+          const counterElement = document.getElementById('popup-counter');
+          if (counterElement) {
+            counterElement.textContent = `#${response.counter}`;
+            counterElement.style.display = 'inline';
+          }
         }
       }
     } else {
