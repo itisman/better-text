@@ -1,0 +1,11 @@
+{
+  "name": "better-text-chrome-extension",
+  "version": "1.0.0",
+  "description": "Chrome extension for text translation",
+  "scripts": {
+    "generate-icons": "node generate-icons.js"
+  },
+  "devDependencies": {
+    "canvas": "^2.11.2"
+  }
+}
