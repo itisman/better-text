@@ -1,0 +1,363 @@
+/* ABOUTME: Styles for the AI Text Rewriter page with platform-specific theming
+   ABOUTME: Implements design matching the mockup with Outlook/Teams toggle styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 40px 20px;
+  color: #333;
+  background-attachment: fixed;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: #f8f9fa;
+  padding: 30px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+h1 {
+  font-size: 28px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #6c757d;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.nav-links {
+  margin-top: 10px;
+}
+
+.nav-links a {
+  color: #667eea;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: #764ba2;
+}
+
+main {
+  padding: 30px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.platform-section {
+  margin-bottom: 25px;
+}
+
+.platform-toggle {
+  display: flex;
+  gap: 0;
+  border-radius: 30px;
+  background: #f8f9fa;
+  padding: 4px;
+  width: fit-content;
+}
+
+.toggle-btn {
+  padding: 10px 24px;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 26px;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.toggle-btn:first-child {
+  margin-right: 4px;
+}
+
+.toggle-btn.active {
+  color: #333;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#outlookToggle.active {
+  background: linear-gradient(135deg, #c3f0ca 0%, #a8e6b0 100%);
+  color: #2d5f34;
+}
+
+.input-section {
+  margin-bottom: 30px;
+}
+
+.input-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid #e9ecef;
+}
+
+.text-input {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.language-toggle {
+  display: flex;
+  gap: 0;
+  background: white;
+  border-radius: 20px;
+  padding: 3px;
+  border: 1px solid #dee2e6;
+}
+
+.lang-btn {
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 17px;
+  transition: all 0.2s;
+}
+
+.lang-btn.active {
+  background: #667eea;
+  color: white;
+}
+
+.rewrite-btn {
+  padding: 10px 28px;
+  background: linear-gradient(135deg, #c3f0ca 0%, #a8e6b0 100%);
+  color: #2d5f34;
+  border: none;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(168, 230, 176, 0.3);
+}
+
+.rewrite-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 230, 176, 0.4);
+}
+
+.rewrite-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-section {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 4px solid #e9ecef;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.results-section h2 {
+  font-size: 20px;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.option-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s;
+}
+
+.option-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.option-header h3 {
+  font-size: 16px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.copy-btn {
+  padding: 6px 16px;
+  background: white;
+  color: #333;
+  border: 2px solid #333;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.copy-btn:hover {
+  background: #333;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.copy-btn.copied {
+  background: #28a745;
+  border-color: #28a745;
+  color: white;
+}
+
+.option-content {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #212529;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+}
+
+.status-message {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: none;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  display: block;
+}
+
+.status-message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  display: block;
+}
+
+.status-message.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+  display: block;
+}
+
+/* Platform-specific styles for Teams mode */
+body.teams-mode .rewrite-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+body.teams-mode .rewrite-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    border-radius: 0;
+    min-height: 100vh;
+  }
+  
+  body {
+    padding: 0;
+  }
+  
+  header, main {
+    padding: 20px;
+  }
+  
+  h1 {
+    font-size: 24px;
+  }
+  
+  .platform-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .toggle-btn {
+    flex: 1;
+  }
+}

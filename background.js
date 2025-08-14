@@ -10,6 +10,11 @@ chrome.runtime.onInstalled.addListener(() => {
   loadTranslationCounters();
 });
 
+// Handle extension icon click to open rewriter in new tab
+chrome.action.onClicked.addListener((tab) => {
+  chrome.tabs.create({ url: 'rewriter.html' });
+});
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'textSelected') {
     handleTextSelection(request.text, sendResponse);
@@ -18,6 +23,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   if (request.action === 'testTranslation') {
     testTranslation(request, sendResponse);
+    return true;
+  }
+  
+  if (request.action === 'rewriteText') {
+    handleTextRewrite(request, sendResponse);
     return true;
   }
   
@@ -362,4 +372,215 @@ function saveTranslationCounters() {
 async function getTargetLanguage() {
   const settings = await chrome.storage.local.get('targetLanguage');
   return settings.targetLanguage || 'zh-CN';
+}
+
+async function handleTextRewrite(request, sendResponse) {
+  console.log('Rewrite request:', request);
+  
+  try {
+    const settings = await chrome.storage.local.get([
+      'apiProvider',
+      'apiKey',
+      'deepseekApiKey',
+      'openaiApiKey',
+      'model',
+      'deepseekModel',
+      'openaiModel'
+    ]);
+    
+    // Get the appropriate API key and model based on the provider
+    let apiKeyToUse;
+    let modelToUse;
+    
+    if (settings.apiProvider === 'deepseek') {
+      apiKeyToUse = settings.deepseekApiKey || settings.apiKey;
+      modelToUse = settings.deepseekModel || settings.model;
+    } else if (settings.apiProvider === 'openai') {
+      apiKeyToUse = settings.openaiApiKey || settings.apiKey;
+      modelToUse = settings.openaiModel || settings.model;
+    } else {
+      apiKeyToUse = settings.apiKey;
+      modelToUse = settings.model;
+    }
+    
+    if (!settings.apiProvider || !apiKeyToUse || !modelToUse) {
+      sendResponse({ 
+        status: 'error', 
+        message: 'Please configure API settings first'
+      });
+      return;
+    }
+    
+    const rewrites = await rewriteText(
+      request.text,
+      request.platform,
+      request.targetLanguage,
+      settings.apiProvider,
+      apiKeyToUse,
+      modelToUse
+    );
+    
+    sendResponse({ 
+      status: 'success', 
+      rewrites: rewrites
+    });
+  } catch (error) {
+    console.error('Rewrite error:', error);
+    sendResponse({ 
+      status: 'error', 
+      message: error.message
+    });
+  }
+}
+
+async function rewriteText(text, platform, targetLanguage, provider, apiKey, model) {
+  // Determine tone based on platform
+  const toneInstructions = platform === 'outlook' 
+    ? 'Use a professional, formal, and business-appropriate tone. The language should be polished, clear, and suitable for professional email communication.'
+    : 'Use a conversational, friendly, and relaxed tone. The language should be casual, approachable, and suitable for team chat communication.';
+  
+  const languageInstruction = targetLanguage === 'zh' 
+    ? 'Write the rewrites in Chinese (Simplified).'
+    : 'Write the rewrites in English.';
+  
+  const prompt = `Rewrite the following text with these requirements:
+1. ${toneInstructions}
+2. ${languageInstruction}
+3. Preserve the exact meaning and intent of the original text - do not add or remove information.
+4. Fix any grammatical issues and improve coherence.
+5. Make the expression more natural and appropriate for the chosen platform (${platform === 'outlook' ? 'Outlook email' : 'Teams chat'}).
+6. Provide exactly 3 different variations.
+
+Original text: "${text}"
+
+Provide 3 different rewrites that maintain the same meaning but with improved expression.`;
+  
+  const responseSchema = {
+    type: "object",
+    properties: {
+      rewrites: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A rewritten version of the text"
+        },
+        minItems: 3,
+        maxItems: 3,
+        description: "Exactly 3 different rewrites of the text"
+      }
+    },
+    required: ["rewrites"],
+    additionalProperties: false
+  };
+  
+  if (provider === 'deepseek') {
+    return await callDeepSeekRewriteAPI(apiKey, model, prompt, responseSchema);
+  } else if (provider === 'openai') {
+    return await callOpenAIRewriteAPI(apiKey, model, prompt, responseSchema);
+  } else {
+    throw new Error('Invalid API provider');
+  }
+}
+
+async function callDeepSeekRewriteAPI(apiKey, model, prompt, responseSchema) {
+  const enhancedPrompt = `${prompt}
+
+Respond with valid JSON in this exact format:
+{
+  "rewrites": [
+    "First rewritten version",
+    "Second rewritten version",
+    "Third rewritten version"
+  ]
+}
+
+Important: Only return valid JSON, no other text.`;
+
+  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional writing assistant. You must respond only with valid JSON in the exact format requested. Do not include any text outside the JSON structure.'
+        },
+        {
+          role: 'user',
+          content: enhancedPrompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
+    })
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`DeepSeek API error: ${error}`);
+  }
+  
+  const data = await response.json();
+  const content = data.choices[0].message.content.trim();
+  
+  try {
+    const parsed = JSON.parse(content);
+    return parsed.rewrites;
+  } catch (parseError) {
+    console.error('Failed to parse response:', content);
+    throw new Error('Failed to parse API response');
+  }
+}
+
+async function callOpenAIRewriteAPI(apiKey, model, prompt, responseSchema) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional writing assistant.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "text_rewrites",
+          schema: responseSchema,
+          strict: true
+        }
+      }
+    })
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`OpenAI API error: ${error}`);
+  }
+  
+  const data = await response.json();
+  const content = data.choices[0].message.content.trim();
+  
+  try {
+    const parsed = JSON.parse(content);
+    return parsed.rewrites;
+  } catch (parseError) {
+    console.error('Failed to parse response:', content);
+    throw new Error('Failed to parse API response');
+  }
 }

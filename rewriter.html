@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Text Rewriter</title>
+  <link rel="stylesheet" href="rewriter.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AI Text Rewriter</h1>
+      <p class="subtitle">Rewrite your text with AI-powered suggestions</p>
+      <nav class="nav-links">
+        <a href="options.html">← Back to Settings</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="platform-section">
+        <div class="platform-toggle">
+          <button id="outlookToggle" class="toggle-btn active">Outlook</button>
+          <button id="teamsToggle" class="toggle-btn">Teams</button>
+        </div>
+      </section>
+
+      <section class="input-section">
+        <div class="input-container">
+          <textarea 
+            id="inputText" 
+            class="text-input" 
+            placeholder="Enter the text you want to rewrite..."
+            rows="6"
+          ></textarea>
+          <div class="input-actions">
+            <div class="language-toggle">
+              <button id="langEn" class="lang-btn active">en</button>
+              <button id="langZh" class="lang-btn">zh</button>
+            </div>
+            <button id="rewriteBtn" class="rewrite-btn">Rewrite</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="loadingSection" class="loading-section" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Generating rewrites...</p>
+      </section>
+
+      <section id="resultsSection" class="results-section" style="display: none;">
+        <h2>Rewrite Options</h2>
+        
+        <div class="option-card">
+          <div class="option-header">
+            <h3>Option 1</h3>
+            <button class="copy-btn" data-option="1">COPY</button>
+          </div>
+          <div class="option-content" id="option1"></div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <h3>Option 2</h3>
+            <button class="copy-btn" data-option="2">COPY</button>
+          </div>
+          <div class="option-content" id="option2"></div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <h3>Option 3</h3>
+            <button class="copy-btn" data-option="3">COPY</button>
+          </div>
+          <div class="option-content" id="option3"></div>
+        </div>
+      </section>
+
+      <div id="status" class="status-message"></div>
+    </main>
+  </div>
+
+  <script src="rewriter.js"></script>
+</body>
+</html>

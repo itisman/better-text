@@ -206,6 +206,22 @@ footer a:hover {
   text-decoration: underline;
 }
 
+.nav-links {
+  margin-top: 10px;
+}
+
+.nav-links a {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.nav-links a:hover {
+  opacity: 0.8;
+}
+
 .stats-info {
   background: #f7f9fc;
   padding: 16px;
