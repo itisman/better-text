@@ -41,13 +41,32 @@ async function handleTextSelection(text, sendResponse) {
     const settings = await chrome.storage.local.get([
       'apiProvider',
       'apiKey',
+      'deepseekApiKey',
+      'openaiApiKey',
       'model',
+      'deepseekModel',
+      'openaiModel',
       'targetLanguage',
       'autoDetectLanguage',
       'cacheTranslations'
     ]);
     
-    if (!settings.apiProvider || !settings.apiKey || !settings.model) {
+    // Get the appropriate API key and model based on the provider
+    let apiKeyToUse;
+    let modelToUse;
+    
+    if (settings.apiProvider === 'deepseek') {
+      apiKeyToUse = settings.deepseekApiKey || settings.apiKey;
+      modelToUse = settings.deepseekModel || settings.model;
+    } else if (settings.apiProvider === 'openai') {
+      apiKeyToUse = settings.openaiApiKey || settings.apiKey;
+      modelToUse = settings.openaiModel || settings.model;
+    } else {
+      apiKeyToUse = settings.apiKey;
+      modelToUse = settings.model;
+    }
+    
+    if (!settings.apiProvider || !apiKeyToUse || !modelToUse) {
       sendResponse({ 
         status: 'error', 
         message: 'Please configure API settings first',
@@ -71,8 +90,8 @@ async function handleTextSelection(text, sendResponse) {
     const translation = await translateText(
       text,
       settings.apiProvider,
-      settings.apiKey,
-      settings.model,
+      apiKeyToUse,
+      modelToUse,
       settings.targetLanguage || 'zh-CN',
       settings.autoDetectLanguage !== false
     );

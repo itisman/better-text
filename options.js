@@ -3,13 +3,16 @@
 
 const DEEPSEEK_MODELS = [
   { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-  { value: 'deepseek-coder', label: 'DeepSeek Coder' }
+  { value: 'deepseek-reasoner', label: 'DeepSeek Reasoner' }
 ];
 
 const OPENAI_MODELS = [
-  { value: 'gpt-4-turbo-preview', label: 'GPT-4 Turbo' },
-  { value: 'gpt-4', label: 'GPT-4' },
-  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
+  { value: 'gpt-5', label: 'GPT-5' },
+  { value: 'gpt-5-mini', label: 'GPT-5-mini' },
+  { value: 'gpt-5-nano', label: 'GPT-5-nano' },
+  { value: 'gpt-4.1', label: 'GPT-4.1' },
+  { value: 'gpt-4.1-mini', label: 'GPT-4.1-mini' },
+  { value: 'gpt-4.1-nano', label: 'GPT-4.1-nano' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,7 +43,7 @@ function handleModifierClickToggle(e) {
   }
 }
 
-function handleProviderChange(e) {
+async function handleProviderChange(e) {
   const provider = e.target.value;
   const modelGroup = document.getElementById('modelGroup');
   const modelSelect = document.getElementById('model');
@@ -60,14 +63,34 @@ function handleProviderChange(e) {
     option.textContent = model.label;
     modelSelect.appendChild(option);
   });
+  
+  // Load the API key and model for the selected provider
+  const settings = await chrome.storage.local.get(['deepseekApiKey', 'openaiApiKey', 'deepseekModel', 'openaiModel']);
+  const apiKeyInput = document.getElementById('apiKey');
+  
+  if (provider === 'deepseek') {
+    apiKeyInput.value = settings.deepseekApiKey || '';
+    if (settings.deepseekModel) {
+      modelSelect.value = settings.deepseekModel;
+    }
+  } else if (provider === 'openai') {
+    apiKeyInput.value = settings.openaiApiKey || '';
+    if (settings.openaiModel) {
+      modelSelect.value = settings.openaiModel;
+    }
+  }
 }
 
 async function loadSettings() {
   try {
     const settings = await chrome.storage.local.get([
       'apiProvider',
-      'apiKey',
-      'model',
+      'apiKey',  // Keep for backward compatibility
+      'deepseekApiKey',
+      'openaiApiKey',
+      'model',  // Keep for backward compatibility
+      'deepseekModel',
+      'openaiModel',
       'targetLanguage',
       'autoDetectLanguage',
       'cacheTranslations',
@@ -78,17 +101,19 @@ async function loadSettings() {
     
     if (settings.apiProvider) {
       document.getElementById('apiProvider').value = settings.apiProvider;
-      handleProviderChange({ target: { value: settings.apiProvider } });
+      await handleProviderChange({ target: { value: settings.apiProvider } });
       
-      if (settings.model) {
-        setTimeout(() => {
+      // Load provider-specific model or fall back to generic model for backward compatibility
+      setTimeout(() => {
+        if (settings.apiProvider === 'deepseek' && settings.deepseekModel) {
+          document.getElementById('model').value = settings.deepseekModel;
+        } else if (settings.apiProvider === 'openai' && settings.openaiModel) {
+          document.getElementById('model').value = settings.openaiModel;
+        } else if (settings.model) {
+          // Backward compatibility
           document.getElementById('model').value = settings.model;
-        }, 100);
-      }
-    }
-    
-    if (settings.apiKey) {
-      document.getElementById('apiKey').value = settings.apiKey;
+        }
+      }, 100);
     }
     
     if (settings.targetLanguage) {
@@ -148,17 +173,31 @@ async function saveSettings() {
   }
   
   try {
-    await chrome.storage.local.set({
+    // Prepare settings object with common settings
+    const settings = {
       apiProvider,
-      apiKey,
-      model,
+      model,  // Keep for backward compatibility
       targetLanguage,
       autoDetectLanguage,
       cacheTranslations,
       enableModifierClick,
       preferredModifier,
       smartCrossPlatform
-    });
+    };
+    
+    // Save provider-specific API key and model
+    if (apiProvider === 'deepseek') {
+      settings.deepseekApiKey = apiKey;
+      settings.deepseekModel = model;
+    } else if (apiProvider === 'openai') {
+      settings.openaiApiKey = apiKey;
+      settings.openaiModel = model;
+    }
+    
+    // Also save as generic apiKey for backward compatibility
+    settings.apiKey = apiKey;
+    
+    await chrome.storage.local.set(settings);
     
     showStatus('Settings saved successfully!', 'success');
   } catch (error) {
