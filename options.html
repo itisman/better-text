@@ -81,6 +81,37 @@
       </section>
 
       <section class="settings-section">
+        <h2>Interaction Settings</h2>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="enableModifierClick" checked>
+            Enable modifier + click translation
+          </label>
+          <small class="help-text">Translate text by holding a modifier key while clicking</small>
+        </div>
+
+        <div class="form-group" id="modifierGroup">
+          <label for="preferredModifier">Preferred Modifier Key</label>
+          <select id="preferredModifier" class="form-control">
+            <option value="auto">Auto (Ctrl on Windows/Linux, ⌘ on Mac)</option>
+            <option value="ctrl">Ctrl</option>
+            <option value="alt">Alt</option>
+            <option value="shift">Shift</option>
+          </select>
+          <small class="help-text">Choose which key to hold while clicking to translate</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="smartCrossPlatform" checked>
+            Smart cross-platform detection
+          </label>
+          <small class="help-text">Automatically use ⌘ on Mac and Ctrl on other platforms when "Auto" is selected</small>
+        </div>
+      </section>
+
+      <section class="settings-section">
         <h2>Statistics</h2>
         <div class="stats-info">
           <p id="totalUniqueTexts">Unique texts translated: Loading...</p>

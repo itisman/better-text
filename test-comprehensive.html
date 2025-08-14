@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Extension Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .functionality {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+        }
+        .settings {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        .test-word {
+            background: #007bff;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: inline-block;
+            margin: 2px;
+        }
+        .platform-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .checklist {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .checklist input[type="checkbox"] {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Better Text Translator - Comprehensive Test</h1>
+    
+    <div class="platform-info">
+        <strong>Platform Detection:</strong> 
+        <span id="platform-info">Loading...</span>
+        <br>
+        <strong>Recommended Modifier:</strong> 
+        <span id="recommended-modifier">Loading...</span>
+    </div>
+
+    <div class="test-section functionality">
+        <h2>✅ Test 1: Double-Click Translation (Original Feature)</h2>
+        <p>Double-click on any of these words to translate:</p>
+        <div>
+            <span class="test-word">beautiful</span>
+            <span class="test-word">amazing</span>
+            <span class="test-word">wonderful</span>
+            <span class="test-word">fantastic</span>
+            <span class="test-word">incredible</span>
+        </div>
+        <p><strong>Expected:</strong> Popup appears with translation and examples</p>
+    </div>
+
+    <div class="test-section functionality">
+        <h2>🆕 Test 2: Modifier+Click Translation (New Feature)</h2>
+        <p>Hold your platform's modifier key and click on these words:</p>
+        <div>
+            <span class="test-word">excellent</span>
+            <span class="test-word">outstanding</span>
+            <span class="test-word">remarkable</span>
+            <span class="test-word">extraordinary</span>
+            <span class="test-word">magnificent</span>
+        </div>
+        <p><strong>Default Modifiers:</strong></p>
+        <ul>
+            <li><strong>Mac:</strong> ⌘ (Command) + Click</li>
+            <li><strong>Windows/Linux:</strong> Ctrl + Click</li>
+            <li><strong>Alternative:</strong> Alt + Click or Shift + Click (configurable)</li>
+        </ul>
+        <p><strong>Expected:</strong> Same popup appears as with double-click</p>
+    </div>
+
+    <div class="test-section functionality">
+        <h2>🔧 Test 3: Both Methods Together</h2>
+        <p>Test that both double-click and modifier+click work on the same content:</p>
+        <p>Try both methods on this sentence: "The <span class="test-word">programming</span> <span class="test-word">language</span> is very <span class="test-word">powerful</span> and <span class="test-word">flexible</span>."</p>
+        <ol>
+            <li>First, double-click on "programming"</li>
+            <li>Close the popup</li>
+            <li>Then, modifier+click on "language"</li>
+            <li>Try double-clicking on "powerful"</li>
+            <li>Try modifier+clicking on "flexible"</li>
+        </ol>
+    </div>
+
+    <div class="test-section settings">
+        <h2>⚙️ Test 4: Settings Configuration</h2>
+        <p>Click the extension icon to open settings and test:</p>
+        <ol>
+            <li>Navigate to "Interaction Settings" section</li>
+            <li>Toggle "Enable modifier + click translation" on/off</li>
+            <li>Try different "Preferred Modifier Key" options</li>
+            <li>Test "Smart cross-platform detection" toggle</li>
+        </ol>
+        <p><strong>Expected:</strong> Settings changes should affect modifier+click behavior immediately</p>
+    </div>
+
+    <div class="test-section checklist">
+        <h2>📋 Test Checklist</h2>
+        <div>
+            <label><input type="checkbox"> Extension loads without errors</label><br>
+            <label><input type="checkbox"> API settings configured successfully</label><br>
+            <label><input type="checkbox"> Double-click translation works</label><br>
+            <label><input type="checkbox"> Modifier+click translation works</label><br>
+            <label><input type="checkbox"> Both methods can be used alternately</label><br>
+            <label><input type="checkbox"> Platform detection works correctly</label><br>
+            <label><input type="checkbox"> Settings can be toggled and saved</label><br>
+            <label><input type="checkbox"> Different modifier keys work when selected</label><br>
+            <label><input type="checkbox"> Popup appears and disappears correctly</label><br>
+            <label><input type="checkbox"> Translation shows with examples</label><br>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🐛 Troubleshooting</h2>
+        <p>If something doesn't work:</p>
+        <ul>
+            <li>Check browser console for errors (F12)</li>
+            <li>Verify extension is loaded and active</li>
+            <li>Ensure API settings are configured</li>
+            <li>Try reloading the extension</li>
+            <li>Test on different websites</li>
+        </ul>
+    </div>
+
+    <script>
+        // Display platform information
+        document.addEventListener('DOMContentLoaded', () => {
+            const platformInfo = document.getElementById('platform-info');
+            const recommendedModifier = document.getElementById('recommended-modifier');
+            
+            platformInfo.textContent = navigator.platform;
+            
+            const isMac = navigator.platform.toLowerCase().includes('mac');
+            recommendedModifier.textContent = isMac ? '⌘ (Command) key' : 'Ctrl key';
+        });
+    </script>
+</body>
+</html>

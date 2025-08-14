@@ -3,6 +3,55 @@
 
 let popupElement = null;
 let selectedText = '';
+let modifierClickSettings = {
+  enabled: true,
+  preferredModifier: 'auto', // 'ctrl', 'alt', 'shift', 'auto'
+  smartCrossPlatform: true
+};
+
+// Load modifier click settings from storage
+async function loadModifierClickSettings() {
+  try {
+    const settings = await chrome.storage.local.get([
+      'enableModifierClick',
+      'preferredModifier', 
+      'smartCrossPlatform'
+    ]);
+    
+    modifierClickSettings.enabled = settings.enableModifierClick !== false; // default true
+    modifierClickSettings.preferredModifier = settings.preferredModifier || 'auto';
+    modifierClickSettings.smartCrossPlatform = settings.smartCrossPlatform !== false; // default true
+  } catch (error) {
+    console.error('Error loading modifier click settings:', error);
+  }
+}
+
+// Check if the correct modifier key is pressed based on settings and platform
+function isModifierActive(event) {
+  if (!modifierClickSettings.enabled) return false;
+  
+  const isMac = navigator.platform.toLowerCase().includes('mac');
+  const modifier = modifierClickSettings.preferredModifier;
+  
+  switch (modifier) {
+    case 'ctrl':
+      return event.ctrlKey;
+    case 'alt':
+      return event.altKey;
+    case 'shift':
+      return event.shiftKey;
+    case 'auto':
+      if (modifierClickSettings.smartCrossPlatform) {
+        // Use Command on Mac, Ctrl on other platforms
+        return isMac ? event.metaKey : event.ctrlKey;
+      } else {
+        // Default to Ctrl regardless of platform
+        return event.ctrlKey;
+      }
+    default:
+      return false;
+  }
+}
 
 function createPopup() {
   if (popupElement) {
@@ -194,10 +243,105 @@ function handleDoubleClick(event) {
   }
 }
 
+function handleModifierClick(event) {
+  // Only proceed if modifier key is active
+  if (!isModifierActive(event)) return;
+  
+  console.log('Modifier click detected:', {
+    ctrlKey: event.ctrlKey,
+    altKey: event.altKey,
+    shiftKey: event.shiftKey,
+    metaKey: event.metaKey,
+    settings: modifierClickSettings
+  });
+  
+  // Prevent default behavior to avoid conflicts
+  event.preventDefault();
+  
+  // Get any currently selected text
+  let selection = window.getSelection();
+  selectedText = selection.toString().trim();
+  
+  console.log('Selected text:', selectedText);
+  
+  // If no text is selected, try to select word under cursor
+  if (!selectedText || selectedText.length === 0) {
+    selectedText = getWordAtPoint(event.clientX, event.clientY);
+    console.log('Word at point:', selectedText);
+  }
+  
+  if (selectedText && selectedText.length > 0) {
+    console.log('Creating popup for:', selectedText);
+    createPopup();
+  } else {
+    console.log('No text found to translate');
+  }
+}
+
+// Helper function to get word at specific point (for modifier+click on unselected text)
+function getWordAtPoint(x, y) {
+  const element = document.elementFromPoint(x, y);
+  if (!element || !element.textContent) return '';
+  
+  // Get the text node at the point
+  let range;
+  if (document.caretRangeFromPoint) {
+    range = document.caretRangeFromPoint(x, y);
+  } else if (document.caretPositionFromPoint) {
+    // Firefox fallback
+    const caretPosition = document.caretPositionFromPoint(x, y);
+    if (caretPosition) {
+      range = document.createRange();
+      range.setStart(caretPosition.offsetNode, caretPosition.offset);
+    }
+  }
+  
+  if (!range || !range.startContainer || range.startContainer.nodeType !== Node.TEXT_NODE) {
+    return '';
+  }
+  
+  const textNode = range.startContainer;
+  const text = textNode.textContent;
+  const offset = range.startOffset;
+  
+  // Find word boundaries
+  let start = offset;
+  let end = offset;
+  
+  // Move start back to beginning of word
+  while (start > 0 && /\w/.test(text[start - 1])) {
+    start--;
+  }
+  
+  // Move end forward to end of word
+  while (end < text.length && /\w/.test(text[end])) {
+    end++;
+  }
+  
+  const word = text.substring(start, end).trim();
+  
+  // Select the word visually
+  if (word) {
+    const selection = window.getSelection();
+    const wordRange = document.createRange();
+    wordRange.setStart(textNode, start);
+    wordRange.setEnd(textNode, end);
+    selection.removeAllRanges();
+    selection.addRange(wordRange);
+  }
+  
+  return word;
+}
+
 document.addEventListener('dblclick', handleDoubleClick);
 
+// Add modifier+click event listener
 document.addEventListener('click', (event) => {
-  if (popupElement && !popupElement.contains(event.target)) {
+  // Handle modifier+click first
+  handleModifierClick(event);
+  
+  // Then handle popup cleanup (only if not a modifier click)
+  if (popupElement && !popupElement.contains(event.target) && !isModifierActive(event)) {
     const selection = window.getSelection();
     if (!selection.toString().trim()) {
       popupElement.remove();
@@ -212,3 +356,6 @@ document.addEventListener('keydown', (event) => {
     popupElement = null;
   }
 });
+
+// Initialize modifier click settings when content script loads
+loadModifierClickSettings();

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Better Text Translator",
   "version": "1.0.0",
-  "description": "Double-click any text to see translation in a popup",
+  "description": "Double-click or Ctrl+click any text to see translation in a popup",
   "permissions": [
     "activeTab",
     "scripting",

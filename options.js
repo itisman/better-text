@@ -24,6 +24,20 @@ function setupEventListeners() {
   document.getElementById('testBtn').addEventListener('click', testConnection);
   document.getElementById('clearCacheBtn').addEventListener('click', clearCache);
   document.getElementById('resetCounterBtn').addEventListener('click', resetCounter);
+  document.getElementById('enableModifierClick').addEventListener('change', handleModifierClickToggle);
+}
+
+function handleModifierClickToggle(e) {
+  const modifierGroup = document.getElementById('modifierGroup');
+  const smartCrossPlatformGroup = document.querySelector('#smartCrossPlatform').closest('.form-group');
+  
+  if (e.target.checked) {
+    modifierGroup.style.display = 'block';
+    smartCrossPlatformGroup.style.display = 'block';
+  } else {
+    modifierGroup.style.display = 'none';
+    smartCrossPlatformGroup.style.display = 'none';
+  }
 }
 
 function handleProviderChange(e) {
@@ -56,7 +70,10 @@ async function loadSettings() {
       'model',
       'targetLanguage',
       'autoDetectLanguage',
-      'cacheTranslations'
+      'cacheTranslations',
+      'enableModifierClick',
+      'preferredModifier',
+      'smartCrossPlatform'
     ]);
     
     if (settings.apiProvider) {
@@ -83,6 +100,20 @@ async function loadSettings() {
     
     document.getElementById('cacheTranslations').checked = 
       settings.cacheTranslations !== false;
+    
+    // Load modifier click settings
+    document.getElementById('enableModifierClick').checked = 
+      settings.enableModifierClick !== false; // default true
+    
+    if (settings.preferredModifier) {
+      document.getElementById('preferredModifier').value = settings.preferredModifier;
+    }
+    
+    document.getElementById('smartCrossPlatform').checked = 
+      settings.smartCrossPlatform !== false; // default true
+    
+    // Toggle modifier group visibility based on enableModifierClick
+    handleModifierClickToggle({ target: { checked: settings.enableModifierClick !== false } });
       
   } catch (error) {
     console.error('Error loading settings:', error);
@@ -97,6 +128,9 @@ async function saveSettings() {
   const targetLanguage = document.getElementById('targetLanguage').value;
   const autoDetectLanguage = document.getElementById('autoDetectLanguage').checked;
   const cacheTranslations = document.getElementById('cacheTranslations').checked;
+  const enableModifierClick = document.getElementById('enableModifierClick').checked;
+  const preferredModifier = document.getElementById('preferredModifier').value;
+  const smartCrossPlatform = document.getElementById('smartCrossPlatform').checked;
   
   if (!apiProvider) {
     showStatus('Please select an API provider', 'error');
@@ -120,7 +154,10 @@ async function saveSettings() {
       model,
       targetLanguage,
       autoDetectLanguage,
-      cacheTranslations
+      cacheTranslations,
+      enableModifierClick,
+      preferredModifier,
+      smartCrossPlatform
     });
     
     showStatus('Settings saved successfully!', 'success');
