@@ -229,7 +229,7 @@ async function testConnection() {
     });
     
     if (response.success) {
-      showStatus(`Connection successful! Test translation: "${response.translation}"`, 'success');
+      showStatus(`Connection successful! Test translation`, 'success');
     } else {
       showStatus(`Connection failed: ${response.error}`, 'error');
     }
