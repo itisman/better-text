@@ -27,7 +27,16 @@ header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 30px;
-  text-align: center;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.header-left {
+  flex: 1;
 }
 
 header h1 {
@@ -220,6 +229,28 @@ footer a:hover {
 
 .nav-links a:hover {
   opacity: 0.8;
+}
+
+.model-info {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.model-label {
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.model-name {
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .stats-info {

@@ -65,9 +65,23 @@ function createPopup() {
   const header = document.createElement('div');
   header.className = 'popup-header';
   
+  const headerLeft = document.createElement('div');
+  headerLeft.className = 'popup-header-left';
+  
   const title = document.createElement('span');
   title.textContent = 'Text Translator';
   title.className = 'popup-title';
+  
+  const modelDisplay = document.createElement('span');
+  modelDisplay.className = 'popup-model';
+  modelDisplay.id = 'popup-model';
+  modelDisplay.textContent = 'Loading...';
+  
+  headerLeft.appendChild(title);
+  headerLeft.appendChild(modelDisplay);
+  
+  const headerRight = document.createElement('div');
+  headerRight.className = 'popup-header-right';
   
   const counterDisplay = document.createElement('span');
   counterDisplay.className = 'popup-counter';
@@ -84,9 +98,11 @@ function createPopup() {
     }
   };
   
-  header.appendChild(title);
-  header.appendChild(counterDisplay);
-  header.appendChild(closeBtn);
+  headerRight.appendChild(counterDisplay);
+  headerRight.appendChild(closeBtn);
+  
+  header.appendChild(headerLeft);
+  header.appendChild(headerRight);
   
   const content = document.createElement('div');
   content.className = 'popup-content';
@@ -143,6 +159,9 @@ function createPopup() {
   setTimeout(() => {
     popupElement.classList.add('show');
   }, 10);
+  
+  // Load and display the current model
+  loadModelInfo();
   
   requestTranslation(translationText, examplesContainer);
 }
@@ -356,6 +375,34 @@ document.addEventListener('keydown', (event) => {
     popupElement = null;
   }
 });
+
+// Load and display current model info in the popup
+async function loadModelInfo() {
+  try {
+    const settings = await chrome.storage.local.get(['apiProvider', 'model', 'deepseekModel', 'openaiModel']);
+    
+    let modelToDisplay = 'Not configured';
+    
+    if (settings.apiProvider === 'deepseek') {
+      modelToDisplay = settings.deepseekModel || settings.model || 'DeepSeek';
+    } else if (settings.apiProvider === 'openai') {
+      modelToDisplay = settings.openaiModel || settings.model || 'OpenAI';
+    } else if (settings.model) {
+      modelToDisplay = settings.model;
+    }
+    
+    const modelElement = document.getElementById('popup-model');
+    if (modelElement) {
+      modelElement.textContent = `Model: ${modelToDisplay}`;
+    }
+  } catch (error) {
+    console.error('Error loading model info:', error);
+    const modelElement = document.getElementById('popup-model');
+    if (modelElement) {
+      modelElement.textContent = 'Model: Unknown';
+    }
+  }
+}
 
 // Initialize modifier click settings when content script loads
 loadModifierClickSettings();

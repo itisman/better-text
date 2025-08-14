@@ -11,6 +11,7 @@ function initialize() {
   setupEventListeners();
   loadUserPreferences();
   checkAPIConfiguration();
+  displayCurrentModel();
 }
 
 function setupEventListeners() {
@@ -196,4 +197,27 @@ function showStatus(message, type) {
 
 function hideStatus() {
   document.getElementById('status').style.display = 'none';
+}
+
+async function displayCurrentModel() {
+  const settings = await chrome.storage.local.get(['apiProvider', 'model', 'deepseekModel', 'openaiModel']);
+  
+  let modelToDisplay = 'Not configured';
+  
+  if (settings.apiProvider === 'deepseek') {
+    modelToDisplay = settings.deepseekModel || settings.model || 'DeepSeek (not set)';
+  } else if (settings.apiProvider === 'openai') {
+    modelToDisplay = settings.openaiModel || settings.model || 'OpenAI (not set)';
+  } else if (settings.model) {
+    modelToDisplay = settings.model;
+  }
+  
+  document.getElementById('currentModel').textContent = modelToDisplay;
+  
+  // Update model display when settings change
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && (changes.apiProvider || changes.model || changes.deepseekModel || changes.openaiModel)) {
+      displayCurrentModel();
+    }
+  });
 }

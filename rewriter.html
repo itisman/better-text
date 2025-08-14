@@ -9,11 +9,19 @@
 <body>
   <div class="container">
     <header>
-      <h1>AI Text Rewriter</h1>
-      <p class="subtitle">Rewrite your text with AI-powered suggestions</p>
-      <nav class="nav-links">
-        <a href="options.html">← Back to Settings</a>
-      </nav>
+      <div class="header-content">
+        <div class="header-left">
+          <h1>AI Text Rewriter</h1>
+          <p class="subtitle">Rewrite your text with AI-powered suggestions</p>
+          <nav class="nav-links">
+            <a href="options.html">← Back to Settings</a>
+          </nav>
+        </div>
+        <div class="model-info">
+          <span class="model-label">Model:</span>
+          <span id="currentModel" class="model-name">Loading...</span>
+        </div>
+      </div>
     </header>
 
     <main>

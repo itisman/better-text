@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   loadStatistics();
   setupEventListeners();
+  displayCurrentModel();
 });
 
 function setupEventListeners() {
@@ -321,4 +322,30 @@ async function resetCounter() {
     console.error('Error resetting counters:', error);
     showStatus('Error resetting counters', 'error');
   }
+}
+
+async function displayCurrentModel() {
+  const settings = await chrome.storage.local.get(['apiProvider', 'model', 'deepseekModel', 'openaiModel']);
+  
+  let modelToDisplay = 'Not configured';
+  
+  if (settings.apiProvider === 'deepseek') {
+    modelToDisplay = settings.deepseekModel || settings.model || 'DeepSeek (not set)';
+  } else if (settings.apiProvider === 'openai') {
+    modelToDisplay = settings.openaiModel || settings.model || 'OpenAI (not set)';
+  } else if (settings.model) {
+    modelToDisplay = settings.model;
+  }
+  
+  const modelElement = document.getElementById('currentModel');
+  if (modelElement) {
+    modelElement.textContent = modelToDisplay;
+  }
+  
+  // Update model display when settings change
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && (changes.apiProvider || changes.model || changes.deepseekModel || changes.openaiModel)) {
+      displayCurrentModel();
+    }
+  });
 }
