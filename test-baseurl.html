@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Base URL Configuration</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196f3;
+        }
+        .test-text {
+            font-size: 18px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .test-text:hover {
+            background: #f0f0f0;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Base URL Configuration Test</h1>
+    
+    <div class="instructions">
+        <h2>Test Instructions:</h2>
+        <ol>
+            <li>Open the extension options page (click extension icon or go to chrome://extensions and click "Options")</li>
+            <li>Select an API provider (DeepSeek or OpenAI)</li>
+            <li>Notice the new "API Base URL" field appears below the API Key field</li>
+            <li>The placeholder shows the default URL for each provider:
+                <ul>
+                    <li>DeepSeek: <code>https://api.deepseek.com (default)</code></li>
+                    <li>OpenAI: <code>https://api.openai.com (default)</code></li>
+                </ul>
+            </li>
+            <li>You can leave it empty to use the default URL</li>
+            <li>Or enter a custom base URL like <code>https://proxy.example.com</code></li>
+            <li>Save settings and test the connection</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Text (Double-click to translate):</h2>
+        <div class="test-text">
+            Hello, world! This is a test message.
+        </div>
+        <div class="test-text">
+            The quick brown fox jumps over the lazy dog.
+        </div>
+        <div class="test-text">
+            Artificial intelligence is transforming the world.
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Expected Behavior:</h2>
+        <ul>
+            <li>✅ Base URL field should show/hide based on provider selection</li>
+            <li>✅ Base URL should be saved per provider (separate for DeepSeek and OpenAI)</li>
+            <li>✅ Empty base URL should use default endpoints</li>
+            <li>✅ Custom base URL should be used for API calls</li>
+            <li>✅ The <code>/v1/chat/completions</code> path is automatically appended</li>
+            <li>✅ Test connection should work with custom base URLs</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Common Use Cases:</h2>
+        <ul>
+            <li><strong>Proxy Server:</strong> Use <code>https://api-proxy.company.com</code> for corporate proxies</li>
+            <li><strong>Local Development:</strong> Use <code>http://localhost:8080</code> for local testing</li>
+            <li><strong>Alternative Endpoints:</strong> Use compatible API services with the same interface</li>
+            <li><strong>Regional Endpoints:</strong> Use region-specific URLs for better latency</li>
+        </ul>
+    </div>
+</body>
+</html>

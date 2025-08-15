@@ -56,21 +56,26 @@ async function handleTextSelection(text, sendResponse) {
       'model',
       'deepseekModel',
       'openaiModel',
+      'deepseekBaseUrl',
+      'openaiBaseUrl',
       'targetLanguage',
       'autoDetectLanguage',
       'cacheTranslations'
     ]);
     
-    // Get the appropriate API key and model based on the provider
+    // Get the appropriate API key, base URL, and model based on the provider
     let apiKeyToUse;
     let modelToUse;
+    let baseUrlToUse;
     
     if (settings.apiProvider === 'deepseek') {
       apiKeyToUse = settings.deepseekApiKey || settings.apiKey;
       modelToUse = settings.deepseekModel || settings.model;
+      baseUrlToUse = settings.deepseekBaseUrl;
     } else if (settings.apiProvider === 'openai') {
       apiKeyToUse = settings.openaiApiKey || settings.apiKey;
       modelToUse = settings.openaiModel || settings.model;
+      baseUrlToUse = settings.openaiBaseUrl;
     } else {
       apiKeyToUse = settings.apiKey;
       modelToUse = settings.model;
@@ -102,6 +107,7 @@ async function handleTextSelection(text, sendResponse) {
       settings.apiProvider,
       apiKeyToUse,
       modelToUse,
+      baseUrlToUse,
       settings.targetLanguage || 'zh-CN',
       settings.autoDetectLanguage !== false
     );
@@ -126,7 +132,7 @@ async function handleTextSelection(text, sendResponse) {
   }
 }
 
-async function translateText(text, provider, apiKey, model, targetLanguage, autoDetect) {
+async function translateText(text, provider, apiKey, model, baseUrl, targetLanguage, autoDetect) {
   const languageName = getLanguageName(targetLanguage);
   const prompt = `Translate "${text}" to ${languageName} and provide 2 example sentences using the word/phrase with their ${languageName} translations.`;
   
@@ -164,15 +170,15 @@ async function translateText(text, provider, apiKey, model, targetLanguage, auto
   };
   
   if (provider === 'deepseek') {
-    return await callDeepSeekAPI(apiKey, model, prompt, responseSchema);
+    return await callDeepSeekAPI(apiKey, model, baseUrl, prompt, responseSchema);
   } else if (provider === 'openai') {
-    return await callOpenAIAPI(apiKey, model, prompt, responseSchema);
+    return await callOpenAIAPI(apiKey, model, baseUrl, prompt, responseSchema);
   } else {
     throw new Error('Invalid API provider');
   }
 }
 
-async function callDeepSeekAPI(apiKey, model, prompt, responseSchema) {
+async function callDeepSeekAPI(apiKey, model, baseUrl, prompt, responseSchema) {
   // DeepSeek doesn't support structured outputs yet, so we'll use a detailed prompt
   const enhancedPrompt = `${prompt}
 
@@ -193,7 +199,8 @@ Respond with valid JSON in this exact format:
 
 Important: Only return valid JSON, no other text.`;
 
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+  const apiEndpoint = baseUrl ? `${baseUrl}/v1/chat/completions` : 'https://api.deepseek.com/v1/chat/completions';
+  const response = await fetch(apiEndpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -235,8 +242,9 @@ Important: Only return valid JSON, no other text.`;
   }
 }
 
-async function callOpenAIAPI(apiKey, model, prompt, responseSchema) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callOpenAIAPI(apiKey, model, baseUrl, prompt, responseSchema) {
+  const apiEndpoint = baseUrl ? `${baseUrl}/v1/chat/completions` : 'https://api.openai.com/v1/chat/completions';
+  const response = await fetch(apiEndpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -288,11 +296,21 @@ async function callOpenAIAPI(apiKey, model, prompt, responseSchema) {
 
 async function testTranslation(request, sendResponse) {
   try {
+    // Get the base URL from storage for the current provider
+    const settings = await chrome.storage.local.get(['deepseekBaseUrl', 'openaiBaseUrl']);
+    let baseUrl;
+    if (request.apiProvider === 'deepseek') {
+      baseUrl = settings.deepseekBaseUrl;
+    } else if (request.apiProvider === 'openai') {
+      baseUrl = settings.openaiBaseUrl;
+    }
+    
     const translation = await translateText(
       request.text,
       request.apiProvider,
       request.apiKey,
       request.model,
+      baseUrl,
       request.targetLanguage,
       true
     );
@@ -385,19 +403,24 @@ async function handleTextRewrite(request, sendResponse) {
       'openaiApiKey',
       'model',
       'deepseekModel',
-      'openaiModel'
+      'openaiModel',
+      'deepseekBaseUrl',
+      'openaiBaseUrl'
     ]);
     
-    // Get the appropriate API key and model based on the provider
+    // Get the appropriate API key, base URL, and model based on the provider
     let apiKeyToUse;
     let modelToUse;
+    let baseUrlToUse;
     
     if (settings.apiProvider === 'deepseek') {
       apiKeyToUse = settings.deepseekApiKey || settings.apiKey;
       modelToUse = settings.deepseekModel || settings.model;
+      baseUrlToUse = settings.deepseekBaseUrl;
     } else if (settings.apiProvider === 'openai') {
       apiKeyToUse = settings.openaiApiKey || settings.apiKey;
       modelToUse = settings.openaiModel || settings.model;
+      baseUrlToUse = settings.openaiBaseUrl;
     } else {
       apiKeyToUse = settings.apiKey;
       modelToUse = settings.model;
@@ -417,7 +440,8 @@ async function handleTextRewrite(request, sendResponse) {
       request.targetLanguage,
       settings.apiProvider,
       apiKeyToUse,
-      modelToUse
+      modelToUse,
+      baseUrlToUse
     );
     
     sendResponse({ 
@@ -433,7 +457,7 @@ async function handleTextRewrite(request, sendResponse) {
   }
 }
 
-async function rewriteText(text, platform, targetLanguage, provider, apiKey, model) {
+async function rewriteText(text, platform, targetLanguage, provider, apiKey, model, baseUrl) {
   // Determine tone based on platform
   const toneInstructions = platform === 'outlook' 
     ? 'Use a professional, formal, and business-appropriate tone. The language should be polished, clear, and suitable for professional email communication.'
@@ -474,15 +498,15 @@ Provide 3 different rewrites that maintain the same meaning but with improved ex
   };
   
   if (provider === 'deepseek') {
-    return await callDeepSeekRewriteAPI(apiKey, model, prompt, responseSchema);
+    return await callDeepSeekRewriteAPI(apiKey, model, baseUrl, prompt, responseSchema);
   } else if (provider === 'openai') {
-    return await callOpenAIRewriteAPI(apiKey, model, prompt, responseSchema);
+    return await callOpenAIRewriteAPI(apiKey, model, baseUrl, prompt, responseSchema);
   } else {
     throw new Error('Invalid API provider');
   }
 }
 
-async function callDeepSeekRewriteAPI(apiKey, model, prompt, responseSchema) {
+async function callDeepSeekRewriteAPI(apiKey, model, baseUrl, prompt, responseSchema) {
   const enhancedPrompt = `${prompt}
 
 Respond with valid JSON in this exact format:
@@ -496,7 +520,8 @@ Respond with valid JSON in this exact format:
 
 Important: Only return valid JSON, no other text.`;
 
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+  const apiEndpoint = baseUrl ? `${baseUrl}/v1/chat/completions` : 'https://api.deepseek.com/v1/chat/completions';
+  const response = await fetch(apiEndpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -536,8 +561,9 @@ Important: Only return valid JSON, no other text.`;
   }
 }
 
-async function callOpenAIRewriteAPI(apiKey, model, prompt, responseSchema) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callOpenAIRewriteAPI(apiKey, model, baseUrl, prompt, responseSchema) {
+  const apiEndpoint = baseUrl ? `${baseUrl}/v1/chat/completions` : 'https://api.openai.com/v1/chat/completions';
+  const response = await fetch(apiEndpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

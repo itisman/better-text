@@ -48,13 +48,17 @@ async function handleProviderChange(e) {
   const provider = e.target.value;
   const modelGroup = document.getElementById('modelGroup');
   const modelSelect = document.getElementById('model');
+  const baseUrlGroup = document.getElementById('baseUrlGroup');
+  const baseUrlInput = document.getElementById('baseUrl');
   
   if (!provider) {
     modelGroup.style.display = 'none';
+    baseUrlGroup.style.display = 'none';
     return;
   }
   
   modelGroup.style.display = 'block';
+  baseUrlGroup.style.display = 'block';
   modelSelect.innerHTML = '<option value="">Select a model</option>';
   
   const models = provider === 'deepseek' ? DEEPSEEK_MODELS : OPENAI_MODELS;
@@ -65,17 +69,25 @@ async function handleProviderChange(e) {
     modelSelect.appendChild(option);
   });
   
-  // Load the API key and model for the selected provider
-  const settings = await chrome.storage.local.get(['deepseekApiKey', 'openaiApiKey', 'deepseekModel', 'openaiModel']);
+  // Load the API key, base URL, and model for the selected provider
+  const settings = await chrome.storage.local.get([
+    'deepseekApiKey', 'openaiApiKey', 
+    'deepseekModel', 'openaiModel',
+    'deepseekBaseUrl', 'openaiBaseUrl'
+  ]);
   const apiKeyInput = document.getElementById('apiKey');
   
   if (provider === 'deepseek') {
     apiKeyInput.value = settings.deepseekApiKey || '';
+    baseUrlInput.value = settings.deepseekBaseUrl || '';
+    baseUrlInput.placeholder = 'https://api.deepseek.com (default)';
     if (settings.deepseekModel) {
       modelSelect.value = settings.deepseekModel;
     }
   } else if (provider === 'openai') {
     apiKeyInput.value = settings.openaiApiKey || '';
+    baseUrlInput.value = settings.openaiBaseUrl || '';
+    baseUrlInput.placeholder = 'https://api.openai.com (default)';
     if (settings.openaiModel) {
       modelSelect.value = settings.openaiModel;
     }
@@ -92,6 +104,8 @@ async function loadSettings() {
       'model',  // Keep for backward compatibility
       'deepseekModel',
       'openaiModel',
+      'deepseekBaseUrl',
+      'openaiBaseUrl',
       'targetLanguage',
       'autoDetectLanguage',
       'cacheTranslations',
@@ -150,6 +164,7 @@ async function loadSettings() {
 async function saveSettings() {
   const apiProvider = document.getElementById('apiProvider').value;
   const apiKey = document.getElementById('apiKey').value;
+  const baseUrl = document.getElementById('baseUrl').value;
   const model = document.getElementById('model').value;
   const targetLanguage = document.getElementById('targetLanguage').value;
   const autoDetectLanguage = document.getElementById('autoDetectLanguage').checked;
@@ -186,13 +201,25 @@ async function saveSettings() {
       smartCrossPlatform
     };
     
-    // Save provider-specific API key and model
+    // Save provider-specific API key, base URL, and model
     if (apiProvider === 'deepseek') {
       settings.deepseekApiKey = apiKey;
       settings.deepseekModel = model;
+      if (baseUrl) {
+        settings.deepseekBaseUrl = baseUrl;
+      } else {
+        // Remove the base URL if empty (use default)
+        await chrome.storage.local.remove('deepseekBaseUrl');
+      }
     } else if (apiProvider === 'openai') {
       settings.openaiApiKey = apiKey;
       settings.openaiModel = model;
+      if (baseUrl) {
+        settings.openaiBaseUrl = baseUrl;
+      } else {
+        // Remove the base URL if empty (use default)
+        await chrome.storage.local.remove('openaiBaseUrl');
+      }
     }
     
     // Also save as generic apiKey for backward compatibility
