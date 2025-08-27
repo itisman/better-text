@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="rewriter.css">
 </head>
 <body>
+  <!-- Fixed History Panel -->
+  <div class="history-container">
+    <div class="history-header">
+      <span class="history-title">Recent</span>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </div>
+  
   <div class="container">
     <header>
       <div class="header-content">
@@ -17,9 +25,12 @@
             <a href="options.html">← Back to Settings</a>
           </nav>
         </div>
-        <div class="model-info">
-          <span class="model-label">Model:</span>
-          <span id="currentModel" class="model-name">Loading...</span>
+        <div class="header-right">
+          <div class="model-info">
+            <button id="newRewriteBtn" class="new-btn" title="Start new rewrite">New</button>
+            <span class="model-label">Model:</span>
+            <span id="currentModel" class="model-name">Loading...</span>
+          </div>
         </div>
       </div>
     </header>

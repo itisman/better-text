@@ -12,6 +12,7 @@ function initialize() {
   loadUserPreferences();
   checkAPIConfiguration();
   displayCurrentModel();
+  loadHistoryUI();
 }
 
 function setupEventListeners() {
@@ -37,6 +38,9 @@ function setupEventListeners() {
       handleRewrite();
     }
   });
+  
+  // New rewrite button
+  document.getElementById('newRewriteBtn').addEventListener('click', handleNewRewrite);
 }
 
 function setPlatform(platform) {
@@ -110,6 +114,12 @@ async function handleRewrite() {
     if (response.status === 'success') {
       displayResults(response.rewrites);
       showStatus('Text rewritten successfully!', 'success');
+      
+      // Save to history with ALL generated options
+      if (response.rewrites && response.rewrites.length > 0) {
+        await saveRewriteHistory(inputText, response.rewrites[0], currentPlatform, currentLanguage, response.rewrites);
+        await loadHistoryUI(); // Refresh history display
+      }
     } else {
       showStatus(response.message || 'Failed to rewrite text', 'error');
     }
@@ -220,4 +230,164 @@ async function displayCurrentModel() {
       displayCurrentModel();
     }
   });
+}
+
+// History Storage Functions
+async function saveRewriteHistory(originalText, rewrittenText, platform, language, allOptions = []) {
+  try {
+    const history = await loadRewriteHistory();
+    
+    const historyEntry = {
+      id: Date.now().toString(),
+      originalText: originalText,
+      rewrittenText: rewrittenText,
+      platform: platform,
+      language: language,
+      timestamp: new Date().toISOString(),
+      allOptions: allOptions // Store all generated rewrite options
+    };
+    
+    // Add to beginning of array and limit to 5 entries
+    history.unshift(historyEntry);
+    
+    // Keep only latest 5 entries
+    const limitedHistory = history.slice(0, 5);
+    
+    await chrome.storage.local.set({ rewriteHistory: limitedHistory });
+    return limitedHistory;
+  } catch (error) {
+    console.error('Failed to save rewrite history:', error);
+    return [];
+  }
+}
+
+async function loadRewriteHistory() {
+  try {
+    const result = await chrome.storage.local.get(['rewriteHistory']);
+    return result.rewriteHistory || [];
+  } catch (error) {
+    console.error('Failed to load rewrite history:', error);
+    return [];
+  }
+}
+
+async function clearRewriteHistory() {
+  try {
+    await chrome.storage.local.remove(['rewriteHistory']);
+    await loadHistoryUI();
+  } catch (error) {
+    console.error('Failed to clear rewrite history:', error);
+  }
+}
+
+// History UI Functions
+async function loadHistoryUI() {
+  const history = await loadRewriteHistory();
+  const historyList = document.getElementById('historyList');
+  
+  if (history.length === 0) {
+    historyList.innerHTML = '<div class="history-empty">No recent rewrites</div>';
+    return;
+  }
+  
+  historyList.innerHTML = '';
+  
+  history.forEach(entry => {
+    const historyItem = createHistoryItem(entry);
+    historyList.appendChild(historyItem);
+  });
+}
+
+function createHistoryItem(entry) {
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.dataset.entryId = entry.id;
+  
+  const text = document.createElement('div');
+  text.className = 'history-item-text';
+  text.textContent = entry.originalText;
+  
+  const meta = document.createElement('div');
+  meta.className = 'history-item-meta';
+  
+  const time = document.createElement('span');
+  time.className = 'history-item-time';
+  time.textContent = formatRelativeTime(entry.timestamp);
+  
+  const mode = document.createElement('span');
+  mode.className = 'history-item-mode';
+  mode.textContent = `${entry.platform}/${entry.language}`;
+  
+  // Add indicator if saved options are available
+  if (entry.allOptions && entry.allOptions.length > 0) {
+    const optionsIndicator = document.createElement('span');
+    optionsIndicator.className = 'history-item-options';
+    optionsIndicator.textContent = `${entry.allOptions.length} options`;
+    optionsIndicator.title = 'Click to restore saved rewrite options';
+    meta.appendChild(optionsIndicator);
+  }
+  
+  meta.appendChild(time);
+  meta.appendChild(mode);
+  
+  item.appendChild(text);
+  item.appendChild(meta);
+  
+  // Add click handler
+  item.addEventListener('click', () => handleHistoryItemClick(entry));
+  
+  return item;
+}
+
+function handleHistoryItemClick(entry) {
+  // Populate textarea with historical content
+  document.getElementById('inputText').value = entry.originalText;
+  
+  // Set platform and language to match history entry
+  setPlatform(entry.platform);
+  setLanguage(entry.language);
+  
+  // Clear any existing results first
+  hideResults();
+  hideStatus();
+  
+  // If the history entry has saved options, restore them
+  if (entry.allOptions && entry.allOptions.length > 0) {
+    // Display the saved options
+    displayResults(entry.allOptions);
+    showStatus('Historical text and rewrite options restored.', 'success');
+  } else {
+    // For older history entries without saved options
+    showStatus('Historical text loaded. Click Rewrite to generate new options.', 'info');
+  }
+}
+
+function handleNewRewrite() {
+  // Clear current content
+  document.getElementById('inputText').value = '';
+  
+  // Hide results and status
+  hideResults();
+  hideStatus();
+  
+  // Focus on textarea
+  document.getElementById('inputText').focus();
+  
+  // Show feedback
+  showStatus('Ready for new rewrite!', 'success');
+}
+
+function formatRelativeTime(timestamp) {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diffMs = now - time;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffMins < 1) return 'now';
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays < 7) return `${diffDays}d`;
+  return time.toLocaleDateString();
 }
